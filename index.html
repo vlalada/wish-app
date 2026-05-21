@@ -2,182 +2,323 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>Пожелание на день</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Кастомные стили для донастройки -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
-        /* Дополнительные стили, которых нет в Tailwind */
-        body {
+        * {
             margin: 0;
             padding: 0;
-            background-color: black;
+            box-sizing: border-box;
+            user-select: none; /* чтобы не выделялся текст при кликах */
+        }
+
+        body {
+            background: black;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
         }
-        /* Контейнер точно как на iPhone 15 Pro (393x852) */
-        .phone-frame {
+
+        /* Экран телефона фиксированного размера (iPhone 15 Pro) */
+        .phone {
             width: 393px;
             height: 852px;
             position: relative;
+            background: black;
             overflow: hidden;
             border-radius: 44px;
-            background: black;
-            box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
         }
-        /* Анимация для счётчиков при клике */
-        .counter-click {
-            transform: scale(1.05);
+
+        /* Фоновое изображение (меняется каждый день) */
+        .bg-photo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        /* Градиентный оверлей с размытием (размытие равномерное, но визуально приятно) */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(18, 18, 18, 0) 0%, 
+                rgba(18, 18, 18, 0.6) 60%,
+                rgba(18, 18, 18, 1) 100%);
+            backdrop-filter: blur(5px);
+            z-index: 1;
+            pointer-events: none; /* чтобы не перехватывать клики */
+        }
+
+        /* Все текстовые контейнеры и интерактивные элементы поверх */
+        .content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Текстовые блоки – абсолютное позиционирование */
+        .text-block {
+            position: absolute;
+            letter-spacing: -0.07em;
+            color: white;
+        }
+
+        /* Классы для интерактивных счётчиков – курсор pointer */
+        .clickable {
+            cursor: pointer;
             transition: transform 0.1s ease;
         }
-        /* Стили для скролла, если контент не влезает (но у нас всё влезает) */
-        ::-webkit-scrollbar {
-            display: none;
+        .clickable:active {
+            transform: scale(0.97);
+        }
+
+        /* Прямоугольник для фото дня */
+        .photo-day {
+            position: absolute;
+            top: 657px;
+            left: 220px;
+            width: 141px;
+            height: 131px;
+            background: #1c1c1c;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .photo-day img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
 </head>
-<body class="bg-black">
-    <div class="phone-frame">
-        <!-- Фоновое изображение (если у вас есть rectangle11.png – положите рядом, иначе фон останется чёрным) -->
-        <!-- <img class="absolute top-0 left-0 w-full h-full object-cover" src="rectangle11.png" alt=""> -->
-        
-        <!-- Размытый оверлей -->
-        <div class="absolute top-0 left-0 w-full h-full backdrop-blur-[10px] backdrop-brightness-100 bg-gradient-to-b from-[rgba(18,18,18,0)] via-[rgba(18,18,18,0)] to-[rgba(18,18,18,0.16)]"></div>
-        
-        <!-- Заголовок -->
-        <header class="absolute top-[61px] left-[35px]">
-            <h1 class="font-semibold text-white text-3xl tracking-[-2.1px]">Пожелание на день</h1>
-        </header>
-        
-        <!-- Декоративные полупрозрачные блоки (можно оставить, они добавляют стиль) -->
-        <div class="absolute top-[118px] left-[8px] w-[250px] h-[529px] bg-white/10"></div>
-        <div class="absolute top-[139px] left-[233px] w-[240px] h-[584px] bg-white/30"></div>
-        
-        <!-- Основное пожелание дня -->
-        <div class="absolute top-[220px] left-[35px] right-[35px]">
-            <div class="text-white text-[28px] font-bold text-center leading-tight" id="dailyWish">
-                Загрузка...
-            </div>
+<body>
+<div class="phone">
+    <!-- Фоновое фото дня (меняется скриптом) -->
+    <img class="bg-photo" id="bgPhoto" src="" alt="фон">
+
+    <!-- Оверлей (градиент + размытие) -->
+    <div class="overlay"></div>
+
+    <div class="content">
+        <!-- Заголовок "Пожелание на день" (35,61) -->
+        <div class="text-block" style="top: 61px; left: 35px; font-weight: 700; font-size: 30px; line-height: 1.2;">
+            Пожелание на день
         </div>
-        
-        <!-- Блок "В этот день мы:" и дополнительная картинка -->
-        <div class="absolute top-[778px] left-[35px] text-white/50 text-[15px] tracking-[-1.05px] font-medium">
+
+        <!-- Основное пожелание дня (35, 490) – динамическое -->
+        <div class="text-block" id="dailyWish" style="top: 490px; left: 35px; font-weight: 400; font-size: 15px; width: calc(100% - 70px);">
+            Загрузка...
+        </div>
+
+        <!-- Надпись "Вместе" (35, 504) – статичная, но рядом счётчик дней -->
+        <div class="text-block" style="top: 504px; left: 35px; font-weight: 700; font-size: 30px;">
+            Вместе
+        </div>
+
+        <!-- Счётчик прожитых дней (35, 504? нет, координаты для цифры: 35 504 уже занято, уточню: автор сказал 35 504 для "вместе", а "365 дней" – вероятно, рядом. Учитывая, что "вместе" и число – разные блоки, размещу число правее. Поскольку не указано, поставлю число сразу после слова "Вместе" с отступом. Но по дизайну лучше: "Вместе 365 дней". Сделаем единую строку? Нет, автор указал отдельно. Сделаем так: слово "Вместе" в 35,504, а число дней – в координатах 120,504 (чтобы не налезало). Я поставлю число в 120,504, шрифт 30, болд. -->
+        <div class="text-block" id="daysTogether" style="top: 504px; left: 120px; font-weight: 700; font-size: 30px;">
+            0
+        </div>
+        <div class="text-block" style="top: 504px; left: 200px; font-weight: 700; font-size: 30px;">
+            дней
+        </div>
+
+        <!-- Статичная надпись "Поцелуем" (35, 606) -->
+        <div class="text-block clickable" id="kissesLabel" style="top: 606px; left: 35px; font-weight: 400; font-size: 15px;">
+            Поцелуем
+        </div>
+
+        <!-- Счётчик поцелуев (93, 600) -->
+        <div class="text-block clickable" id="kissesCount" style="top: 600px; left: 93px; font-weight: 400; font-size: 10px;">
+            0
+        </div>
+
+        <!-- Статичная "Обнимашки" (136, 606) -->
+        <div class="text-block clickable" id="hugsLabel" style="top: 606px; left: 136px; font-weight: 400; font-size: 15px;">
+            Обнимашки
+        </div>
+
+        <!-- Счётчик обнимашек (215, 600) -->
+        <div class="text-block clickable" id="hugsCount" style="top: 600px; left: 215px; font-weight: 400; font-size: 10px;">
+            0
+        </div>
+
+        <!-- Статичная "Комплименты" (257, 608) – согласно заданию, но 608 vs 606, оставлю 608 -->
+        <div class="text-block clickable" id="complimentsLabel" style="top: 608px; left: 257px; font-weight: 400; font-size: 15px;">
+            Комплименты
+        </div>
+
+        <!-- Счётчик комплиментов (350, 600) -->
+        <div class="text-block clickable" id="complimentsCount" style="top: 600px; left: 350px; font-weight: 400; font-size: 10px;">
+            0
+        </div>
+
+        <!-- "В этот день мы:" (35, 655) с прозрачностью 50% -->
+        <div class="text-block" style="top: 655px; left: 35px; font-weight: 700; font-size: 15px; opacity: 0.5;">
             В этот день мы:
         </div>
-        <div class="absolute top-[789px] left-[220px] w-[141px] h-[158px] bg-white/10 rounded-2xl"></div>
-        <h2 class="absolute top-[829px] left-[35px] w-[104px] font-semibold text-white text-[17px] tracking-[-1.19px]">
-            Пожелание
-        </h2>
-        
-        <!-- Дата -->
-        <time class="absolute top-[917px] left-[35px] text-white text-[15px] tracking-[-1.05px]" id="currentDate">
+
+        <!-- Фраза "что делали год назад" (35, 686) -->
+        <div class="text-block" id="memoryText" style="top: 686px; left: 35px; font-weight: 600; font-size: 17px; width: calc(100% - 70px);">
+            Загрузка...
+        </div>
+
+        <!-- Дата (35, 774) -->
+        <div class="text-block" id="currentDate" style="top: 774px; left: 35px; font-weight: 400; font-size: 15px;">
             21 мая 2026
-        </time>
-        
-        <!-- Счётчики (интерактивные) -->
-        <div class="absolute bottom-[50px] left-0 right-0 flex justify-around px-[35px]">
-            <!-- Поцелуи -->
-            <div class="text-center cursor-pointer" id="kissesCounter">
-                <div class="text-white text-[10px] tracking-[-0.7px] font-normal" id="kissesValue">0</div>
-                <div class="text-white text-[15px] tracking-[-1.05px] font-normal mt-1">Поцелуи</div>
-            </div>
-            <!-- Обнимашки -->
-            <div class="text-center cursor-pointer" id="hugsCounter">
-                <div class="text-white text-[10px] tracking-[-0.7px] font-normal" id="hugsValue">0</div>
-                <div class="text-white text-[15px] tracking-[-1.05px] font-normal mt-1">Обнимашки</div>
-            </div>
-            <!-- Комплименты -->
-            <div class="text-center cursor-pointer" id="complimentsCounter">
-                <div class="text-white text-[10px] tracking-[-0.7px] font-normal" id="complimentsValue">0</div>
-                <div class="text-white text-[15px] tracking-[-1.05px] font-normal mt-1">Комплименты</div>
-            </div>
+        </div>
+
+        <!-- Прямоугольник для фото дня -->
+        <div class="photo-day" id="photoDayContainer">
+            <img id="photoDayImg" src="" alt="фото дня">
         </div>
     </div>
+</div>
 
-    <script>
-        // ------------------- Ежедневное пожелание -------------------
-        // Здесь ваши пожелания (ключ – день года, 1 = 1 января)
-        const wishes = {
-            1: "❤️ С первой годовщины! Ты лучший! ❤️",
-            2: "☀️ Пусть сегодняшний день будет ярким, как твоя улыбка!",
-            3: "😊 Просто хочу сказать, что очень тебя люблю!",
-            // Добавляйте свои пожелания на каждый день (до 365)
-        };
-        
-        function getDayOfYear() {
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            const diff = now - start;
-            const oneDay = 86400000;
-            return Math.floor(diff / oneDay);
-        }
-        
-        const dayNum = getDayOfYear();
-        const defaultWish = "Я тебя очень сильно люблю! 💖";
-        const wishText = wishes[dayNum] || defaultWish;
-        document.getElementById('dailyWish').innerText = wishText;
-        
-        // ------------------- Текущая дата -------------------
-        const now = new Date();
+<script>
+    // ------------------- ДАННЫЕ (ЗАПОЛНИТЕ СВОИМИ) -------------------
+    
+    // Пожелания на каждый день (ключ – номер дня в году, 1 = 1 января)
+    const wishes = {
+        1: "❤️ С первой годовщины! Ты лучший! ❤️",
+        2: "☀️ Пусть сегодняшний день будет ярким, как твоя улыбка!",
+        3: "😊 Просто хочу сказать, что очень тебя люблю!",
+        // Добавьте свои пожелания до 365 (например, 4: "текст", 5: "текст"...)
+    };
+
+    // Фразы "год назад" (что вы делали в этот день год назад)
+    const memories = {
+        1: "Познакомились в кафе и пили кофе",
+        2: "Гуляли в парке и кормили уток",
+        3: "Смотрели фильм дома, обнимались",
+        // Добавьте свои воспоминания
+    };
+
+    // Список фоновых фото (меняются ежедневно, индекс = день года)
+    // Подставьте свои URL или относительные пути. Пример:
+    const bgPhotos = [
+        "", // индекс 0 не используется
+        "https://picsum.photos/id/104/393/852", // 1 января
+        "https://picsum.photos/id/106/393/852",
+        "https://picsum.photos/id/107/393/852",
+        // ...
+    ];
+
+    // Список фото для прямоугольника (тоже по дням года)
+    const dayPhotos = [
+        "",
+        "https://picsum.photos/id/20/141/131",
+        "https://picsum.photos/id/21/141/131",
+        "https://picsum.photos/id/22/141/131",
+        // ...
+    ];
+
+    // Дата начала отношений (для счётчика дней)
+    const startDate = new Date(2025, 4, 21); // 21 мая 2025 (месяцы в JS: 0-11, поэтому 4 = май)
+
+    // ------------------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ -------------------
+    function getDayOfYear(date = new Date()) {
+        const start = new Date(date.getFullYear(), 0, 0);
+        const diff = date - start;
+        const oneDay = 86400000;
+        return Math.floor(diff / oneDay);
+    }
+
+    // Форматирование даты
+    function formatDate(date) {
         const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 
                         'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-        const dateString = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-        document.getElementById('currentDate').innerText = dateString;
-        
-        // ------------------- Счётчики с сохранением в localStorage -------------------
-        // Получаем сохранённые значения или устанавливаем 0
-        let kisses = localStorage.getItem('kisses') ? parseInt(localStorage.getItem('kisses')) : 0;
-        let hugs = localStorage.getItem('hugs') ? parseInt(localStorage.getItem('hugs')) : 0;
-        let compliments = localStorage.getItem('compliments') ? parseInt(localStorage.getItem('compliments')) : 0;
-        
-        // Функция обновления чисел на экране
-        function updateCountersUI() {
-            document.getElementById('kissesValue').innerText = kisses;
-            document.getElementById('hugsValue').innerText = hugs;
-            document.getElementById('complimentsValue').innerText = compliments;
+        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    // Количество дней вместе
+    function getDaysTogether() {
+        const now = new Date();
+        const diffTime = now - startDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 ? diffDays : 0;
+    }
+
+    // ------------------- ИНИЦИАЛИЗАЦИЯ СЧЁТЧИКОВ (localStorage) -------------------
+    let kisses = parseInt(localStorage.getItem('kisses')) || 0;
+    let hugs = parseInt(localStorage.getItem('hugs')) || 0;
+    let compliments = parseInt(localStorage.getItem('compliments')) || 0;
+
+    function updateCountersUI() {
+        document.getElementById('kissesCount').innerText = kisses;
+        document.getElementById('hugsCount').innerText = hugs;
+        document.getElementById('complimentsCount').innerText = compliments;
+    }
+
+    function incrementCounter(type) {
+        if (type === 'kisses') {
+            kisses++;
+            localStorage.setItem('kisses', kisses);
+        } else if (type === 'hugs') {
+            hugs++;
+            localStorage.setItem('hugs', hugs);
+        } else if (type === 'compliments') {
+            compliments++;
+            localStorage.setItem('compliments', compliments);
         }
-        
-        // Функция увеличения счётчика и сохранения
-        function incrementCounter(counterName) {
-            let newValue;
-            if (counterName === 'kisses') {
-                kisses++;
-                newValue = kisses;
-                localStorage.setItem('kisses', kisses);
-            } else if (counterName === 'hugs') {
-                hugs++;
-                newValue = hugs;
-                localStorage.setItem('hugs', hugs);
-            } else if (counterName === 'compliments') {
-                compliments++;
-                newValue = compliments;
-                localStorage.setItem('compliments', compliments);
-            }
-            updateCountersUI();
-            
-            // Небольшая анимация при клике
-            const element = document.getElementById(`${counterName}Counter`);
-            element.classList.add('counter-click');
-            setTimeout(() => {
-                element.classList.remove('counter-click');
-            }, 100);
-        }
-        
-        // Навешиваем обработчики на клики
-        document.getElementById('kissesCounter').addEventListener('click', () => incrementCounter('kisses'));
-        document.getElementById('hugsCounter').addEventListener('click', () => incrementCounter('hugs'));
-        document.getElementById('complimentsCounter').addEventListener('click', () => incrementCounter('compliments'));
-        
-        // Первоначальное отображение
         updateCountersUI();
-    </script>
+    }
+
+    // ------------------- ОБНОВЛЕНИЕ ДАННЫХ ПО ДНЮ -------------------
+    const today = new Date();
+    const dayNum = getDayOfYear(today);
+    
+    // Пожелание дня
+    const wishText = wishes[dayNum] || "Я тебя очень сильно люблю! 💖";
+    document.getElementById('dailyWish').innerText = wishText;
+    
+    // Воспоминание год назад
+    const memoryText = memories[dayNum] || "Обнимались и смеялись ❤️";
+    document.getElementById('memoryText').innerText = memoryText;
+    
+    // Дата сегодня
+    document.getElementById('currentDate').innerText = formatDate(today);
+    
+    // Счётчик дней вместе
+    document.getElementById('daysTogether').innerText = getDaysTogether();
+    
+    // Фоновое фото (если есть по индексу)
+    if (bgPhotos[dayNum]) {
+        document.getElementById('bgPhoto').src = bgPhotos[dayNum];
+    } else {
+        // можно задать заглушку
+        document.getElementById('bgPhoto').src = "https://picsum.photos/id/42/393/852";
+    }
+    
+    // Фото дня в прямоугольнике
+    if (dayPhotos[dayNum]) {
+        document.getElementById('photoDayImg').src = dayPhotos[dayNum];
+    } else {
+        document.getElementById('photoDayImg').src = "https://picsum.photos/id/26/141/131";
+    }
+    
+    // ------------------- НАВЕШИВАЕМ КЛИКИ НА СЧЁТЧИКИ -------------------
+    document.getElementById('kissesLabel').addEventListener('click', () => incrementCounter('kisses'));
+    document.getElementById('kissesCount').addEventListener('click', () => incrementCounter('kisses'));
+    document.getElementById('hugsLabel').addEventListener('click', () => incrementCounter('hugs'));
+    document.getElementById('hugsCount').addEventListener('click', () => incrementCounter('hugs'));
+    document.getElementById('complimentsLabel').addEventListener('click', () => incrementCounter('compliments'));
+    document.getElementById('complimentsCount').addEventListener('click', () => incrementCounter('compliments'));
+    
+    updateCountersUI();
+</script>
 </body>
 </html>
