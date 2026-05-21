@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Моё сердечко</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: black;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        #wish {
+            color: white;
+            font-size: 8vw;
+            text-align: center;
+            padding: 20px;
+            line-height: 1.3;
+            max-width: 90%;
+        }
+    </style>
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+</head>
+<body>
+    <div id="wish">Загрузка...</div>
+    <script>
+        // Здесь будут твои пожелания.
+        // 1 = 1 января, 2 = 2 января и так далее
+        const wishes = {
+            1: "❤️ С первой годовщины! Люблю тебя! ❤️",
+            2: "☀️ Пусть день будет тёплым, как мои объятия",
+            3: "😊 Ты мой герой. Хорошего дня!"
+            // Добавляй новые, не забывая ставить запятую после каждой строки!
+        };
+        // Магия для определения дня в году
+        const day = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        // Показываем твоё пожелание или стандартное
+        const text = wishes[day] || "Я тебя очень сильно люблю! 💖";
+        document.getElementById('wish').innerText = text;
+    </script>
+</body>
+</html>
