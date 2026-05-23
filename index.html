@@ -50,7 +50,7 @@
                 rgba(18, 18, 18, 0) 0%, 
                 rgba(18, 18, 18, 0.6) 60%,
                 rgba(18, 18, 18, 1) 100%);
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(5px);
             z-index: 1;
             pointer-events: none;
         }
@@ -93,9 +93,11 @@
             word-wrap: break-word;
         }
     </style>
+    <link rel="apple-touch-icon" href="icon.png">
 </head>
 <body>
 <div class="phone">
+    <!-- Фоновое фото -->
     <img class="bg-photo" id="bgPhoto" src="" alt="фон">
     <div class="overlay"></div>
     <div class="content">
@@ -164,7 +166,7 @@
 </div>
 
 <script>
-    // ------------------- ПОЖЕЛАНИЯ (50 фраз, без синтаксических ошибок) -------------------
+    // ------------------- ПОЖЕЛАНИЯ -------------------
     const phrases = [
         "Когда ты смотришь, во мне расцветает весна",
         "Рядом с тобой страшно, но я не боюсь",
@@ -218,17 +220,19 @@
         "С тобой я чувствую себя желанной и настоящей"
     ];
 
-    // ------------------- СПИСКИ ФАЙЛОВ ДЛЯ СЛУЧАЙНЫХ ФОТО -------------------
-    // ⚠️ ВАЖНО: замените эти имена на свои файлы, которые лежат в папке images
-    const bgImageList = [
-        "images/bg_jan2.jpg"
-        // добавьте сюда все свои фоновые фото, например "images/bg1.jpg", "images/bg2.jpg", ...
-    ];
+    // ------------------- СПИСОК ФОНОВЫХ ФОТО (81 штука) -------------------
+    // Генерируем массив имён bg_jan1.jpg ... bg_jan81.jpg
+    const bgImageList = [];
+    for (let i = 1; i <= 81; i++) {
+        bgImageList.push(`images/bg_jan${i}.jpg`);
+    }
 
-    const squareImageList = [
-        "images/pic_day2.jpg",
-        // добавьте свои фото для прямоугольника, например "images/square1.jpg", "images/square2.jpg", ...
-    ];
+    // ------------------- СПИСОК КВАДРАТНЫХ ФОТО (52 штуки) -------------------
+    // Генерируем массив имён pic_day2.jpg ... pic_day53.jpg
+    const squareImageList = [];
+    for (let i = 2; i <= 53; i++) {
+        squareImageList.push(`images/pic_day${i}.jpg`);
+    }
 
     // ------------------- ДАТА НАЧАЛА ОТНОШЕНИЙ (24 МАЯ 2025) -------------------
     const startDate = new Date(2025, 4, 24);
@@ -263,13 +267,11 @@
         return `${dayCount} дней`;
     }
 
-    // Случайный выбор элемента из массива
     function randomItem(arr) {
         if (!arr.length) return "";
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    // Получить случайное фото для текущего дня (с сохранением в localStorage)
     function getDailyPhoto(key, list) {
         if (!list.length) return "";
         const todayStr = new Date().toLocaleDateString('ru-RU');
@@ -311,7 +313,6 @@
     const today = new Date();
     const dayNum = getDayOfYear(today);
 
-    // Генерируем wishes на основе phrases (циклически)
     const wishes = {};
     for (let i = 1; i <= 366; i++) {
         wishes[i] = phrases[(i - 1) % phrases.length];
@@ -320,7 +321,6 @@
     const wishText = wishes[dayNum] || "Я люблю тебя просто за то, что ты есть";
     document.getElementById('dailyWish').innerText = wishText;
 
-    // Воспоминания (можно дополнить)
     const memories = {
         1: "Познакомились в кафе и пили кофе",
         2: "Гуляли в парке и кормили уток",
@@ -333,13 +333,13 @@
     const daysCount = getDaysTogether();
     document.getElementById('daysBlock').innerText = formatDays(daysCount);
 
-    // Случайные фото на сегодня (если списки не пусты)
+    // Случайные фото на сегодня
     const bgPhoto = getDailyPhoto('bg', bgImageList);
     const squarePhoto = getDailyPhoto('square', squareImageList);
     if (bgPhoto) document.getElementById('bgPhoto').src = bgPhoto;
     if (squarePhoto) document.getElementById('photoDayImg').src = squarePhoto;
 
-    // ------------------- КЛИКИ НА СЧЁТЧИКИ -------------------
+    // ------------------- КЛИКИ -------------------
     document.getElementById('kissesLabel').addEventListener('click', () => incrementCounter('kisses'));
     document.getElementById('kissesCount').addEventListener('click', () => incrementCounter('kisses'));
     document.getElementById('hugsLabel').addEventListener('click', () => incrementCounter('hugs'));
